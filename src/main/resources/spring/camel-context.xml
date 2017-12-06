@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+	<camelContext id="hystrix-gateway" xmlns="http://camel.apache.org/schema/spring">
+
+
+		<hystrixConfiguration id="hystrixConfig"
+			groupKey="gateway" circuitBreakerEnabled="true"
+			executionTimeoutInMilliseconds="1000" />
+
+		<restConfiguration hostNameResolver="allLocalIp"
+			component="servlet" />
+		<rest>
+			<get uri="/ping-gateway/{delayms}">
+				<to uri="direct:ping-gateway" />
+			</get>
+
+			<get uri="/service-balance">
+				<route>
+					<hystrix hystrixConfigurationRef="hystrixConfig">
+						<to uri="{{service-balance-uri}}"></to>
+						<onFallback>
+							<to uri="direct:generic-fallback-route" />
+						</onFallback>
+					</hystrix>
+
+				</route>
+			</get>
+
+
+			<get uri="/get-active-products">
+				<route>
+					<hystrix hystrixConfigurationRef="hystrixConfig">
+						<to uri="{{get-active-products-uri}}"></to>
+						<onFallback>
+							<to uri="direct:generic-fallback-route" />
+						</onFallback>
+					</hystrix>
+
+				</route>
+			</get>
+
+		</rest>
+
+
+
+		<route id="ping-gateway">
+			<from uri="direct:ping-gateway" />
+			<hystrix hystrixConfigurationRef="hystrixConfig">
+				<setBody>
+					<simple>REQUEST SUCCESSFUL</simple>
+				</setBody>
+				<delay>
+					<simple>${header.delayms}</simple>
+				</delay>
+				<onFallback>
+					<to uri="direct:generic-fallback-route" />
+				</onFallback>
+			</hystrix>
+		</route>
+
+
+		<route id="generic-fallback-route">
+			<from uri="direct:generic-fallback-route" />
+			<setHeader headerName="CamelHttpResponseCode">
+				<constant>500</constant>
+			</setHeader>
+			<setBody>
+				<constant>REQUEST FAILED /!\</constant>
+			</setBody>
+		</route>
+	</camelContext>
+</beans>
