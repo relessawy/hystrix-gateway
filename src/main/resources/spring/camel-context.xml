@@ -50,12 +50,21 @@
 		<route id="ping-gateway">
 			<from uri="direct:ping-gateway" />
 			<hystrix hystrixConfigurationRef="hystrixConfig">
-				<setBody>
-					<simple>REQUEST SUCCESSFUL</simple>
-				</setBody>
+
 				<delay>
 					<simple>${header.delayms}</simple>
 				</delay>
+				<choice>
+					<when>
+						<simple>${header.error}</simple>
+						<throwException exceptionType="java.lang.Exception" message="REQUEST FAILED"></throwException>
+					</when>
+					<otherwise>
+						<setBody>
+							<constant>{"message" : "REQUEST SUCCESS"}</constant>
+						</setBody>
+					</otherwise>
+				</choice>
 				<onFallback>
 					<to uri="direct:generic-fallback-route" />
 				</onFallback>
@@ -69,7 +78,7 @@
 				<constant>500</constant>
 			</setHeader>
 			<setBody>
-				<constant>REQUEST FAILED /!\</constant>
+				<constant>{"error" : "REQUEST FAILED"}</constant>
 			</setBody>
 		</route>
 	</camelContext>
