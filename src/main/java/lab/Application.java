@@ -25,16 +25,20 @@ import org.springframework.cloud.netflix.hystrix.dashboard.EnableHystrixDashboar
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
 
+
 @SpringBootApplication
 // load regular Spring XML file from the classpath that contains the Camel XML DSL
 @ImportResource({"classpath:spring/camel-context.xml"})
 @EnableHystrixDashboard
 public class Application {
 
+	static {
+	}
 	/**
 	 * A main method to start this application.
 	 */
 	public static void main(String[] args) {
+		
 		SpringApplication.run(Application.class, args);
 	}
 

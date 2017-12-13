@@ -2,84 +2,80 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
-
-
 	<camelContext id="hystrix-gateway" xmlns="http://camel.apache.org/schema/spring">
-
-
-		<hystrixConfiguration id="hystrixConfig"
-			groupKey="gateway" circuitBreakerEnabled="true"
-			executionTimeoutInMilliseconds="1000" />
-
-		<restConfiguration hostNameResolver="allLocalIp"
-			component="servlet" />
+		<hystrixConfiguration circuitBreakerEnabled="true"
+			executionTimeoutInMilliseconds="1000" groupKey="gateway" id="hystrixConfig" />
+		<restConfiguration component="servlet"
+			hostNameResolver="allLocalIp" />
 		<rest>
 			<get uri="/ping-gateway/{delayms}">
 				<to uri="direct:ping-gateway" />
 			</get>
-
 			<get uri="/service-balance">
 				<route>
 					<hystrix hystrixConfigurationRef="hystrixConfig">
-						<to uri="{{service-balance-uri}}"></to>
+						<to uri="{{service-balance-uri}}" />
 						<onFallback>
 							<to uri="direct:generic-fallback-route" />
 						</onFallback>
 					</hystrix>
-
 				</route>
 			</get>
-
-
 			<get uri="/get-active-products">
 				<route>
 					<hystrix hystrixConfigurationRef="hystrixConfig">
-						<to uri="{{get-active-products-uri}}"></to>
+						<to uri="{{get-active-products-uri}}" />
 						<onFallback>
 							<to uri="direct:generic-fallback-route" />
 						</onFallback>
 					</hystrix>
-
 				</route>
 			</get>
-
 		</rest>
-
-
-
+		
 		<route id="ping-gateway">
-			<from uri="direct:ping-gateway" />
-			<hystrix hystrixConfigurationRef="hystrixConfig">
-
-				<delay>
-					<simple>${header.delayms}</simple>
-				</delay>
-				<choice>
-					<when>
-						<simple>${header.error}</simple>
-						<throwException exceptionType="java.lang.Exception" message="REQUEST FAILED"></throwException>
-					</when>
-					<otherwise>
-						<setBody>
-							<constant>{"message" : "REQUEST SUCCESS"}</constant>
-						</setBody>
-					</otherwise>
-				</choice>
-				<onFallback>
-					<to uri="direct:generic-fallback-route" />
+			<from id="_from1" uri="direct:ping-gateway" />
+			<hystrix hystrixConfigurationRef="hystrixConfig" id="ping-gw">
+				<toD uri="seda:dummyProcess?timeout=${header.timeout}" />
+				<onFallback id="_onFallback1">
+					<to id="_to1" uri="direct:generic-fallback-route" />
 				</onFallback>
 			</hystrix>
 		</route>
-
-
+		
 		<route id="generic-fallback-route">
-			<from uri="direct:generic-fallback-route" />
-			<setHeader headerName="CamelHttpResponseCode">
+			<from id="_from2" uri="direct:generic-fallback-route" />
+			<setHeader headerName="CamelHttpResponseCode" id="_setHeader1">
 				<constant>500</constant>
 			</setHeader>
-			<setBody>
-				<constant>{"error" : "REQUEST FAILED"}</constant>
+			<log message="headers ${headers}"></log>
+			<log message="body ${body}"></log>
+			<log message="props ${exchange.properties}"></log>
+
+			<setBody id="_setBody2">
+				<simple>{"error" : "REQUEST FAILED :  ${property.CamelExceptionCaught}"}</simple>
 			</setBody>
 		</route>
+
+
+		<route id="dummyProcess">
+			<from uri="seda:dummyProcess" />
+			<delay id="_delay1">
+				<simple>${header.delayms}</simple>
+			</delay>
+			<choice id="_choice1">
+				<when id="_when1">
+					<simple>${header.error}</simple>
+					<throwException exceptionType="java.lang.Exception"
+						id="_throwException1" message="REQUEST FAILED" />
+				</when>
+				<otherwise id="_otherwise1">
+					<setBody id="_setBody1">
+						<constant>{"message" : "REQUEST SUCCESS"}</constant>
+					</setBody>
+				</otherwise>
+			</choice>
+		</route>
+
 	</camelContext>
 </beans>

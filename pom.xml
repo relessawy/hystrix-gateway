@@ -107,7 +107,6 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-turbine</artifactId>
 		</dependency>
-
 	</dependencies>
 
 
@@ -154,6 +153,33 @@
 				<version>${fabric8.maven.plugin.version}</version> <executions> <execution> 
 				<goals> <goal>resource</goal> <goal>build</goal> </goals> </execution> </executions> 
 				</plugin> -->
+
+
+
+		<!-- Prometheus JMX Exporter java agent dependency -->
+ 	
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<useBaseVersion>true</useBaseVersion>
+							<artifactItems>
+								<artifactItem>
+									<groupId>io.prometheus.jmx</groupId>
+									<artifactId>jmx_prometheus_javaagent</artifactId>
+									<version>0.10</version>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
 		</plugins>
 

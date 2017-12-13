@@ -269,7 +269,35 @@
 			"request": {
 				"url": "http://localhost:8002/rest-api/ping-gateway/100",
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "timeout",
+						"value": "3000",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8002/rest-api/ping-gateway/ERROR",
+			"request": {
+				"url": "http://localhost:8002/rest-api/ping-gateway/1",
+				"method": "GET",
+				"header": [
+					{
+						"key": "error",
+						"value": "er",
+						"description": ""
+					},
+					{
+						"key": "timeout",
+						"value": "3000",
+						"description": ""
+					}
+				],
 				"body": {},
 				"description": ""
 			},
